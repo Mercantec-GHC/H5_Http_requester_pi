@@ -1,0 +1,35 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "pages": [
+        {
+          "id": 3,
+          "path": "https://www.google.com",
+          "interval_time": 60
+        },
+        {
+          "id": 4,
+          "path": "https://www.facebook.com",
+          "interval_time": 15
+        }
+      ]
+    },
+    {
+      "user_id": 2,
+      "pages": [
+        {
+          "id": 1,
+          "path": "https://www.google.com",
+          "interval_time": 60
+        },
+        {
+          "id": 2,
+          "path": "https://www.facebook.com",
+          "interval_time": 30
+        }
+      ]
+    }
+  ]
+
+}
