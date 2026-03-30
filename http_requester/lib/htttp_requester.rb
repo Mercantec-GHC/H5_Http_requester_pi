@@ -16,22 +16,19 @@ class HttpRequester
     until @stop
       begin
         update_page_handler! if state.changes?
-        # run_curl_on_home_pages!
-        # print_curl_responses!
+        run_curl_on_home_pages! if page_handler.pages_needing_ping?
       rescue => e
         logger.error("An error occurred in event loop: #{e.message} \n #{e.backtrace.join("\n")}")
       end
       sleep(2)
     end
   end
-
-  def print_curl_responses!
-    curl_responses.each do |curl_response|
-      curl_response.pretty_print_data
-    end
-  end
   
   private
+
+  def report_ping_response_to_mqtt()
+    
+  end
 
   def load_websites_from_api!
     api_response = FaradayService.get_response("http://localhost:8080/api/Websites")
@@ -50,7 +47,7 @@ class HttpRequester
     end
   
   def update_page_handler!
-    state.changes.each do |change|
+    state.fetch_changes.each do |change|
       case change.type
       when "website_created"
         page_handler.add_page_from_change(change)
@@ -62,13 +59,20 @@ class HttpRequester
         logger.warn("Unknown change type: #{change.type}")
       end
     end
-    state.clean_changes!
   end
   
     def run_curl_on_home_pages!
-    @curl_responses = home_pages.map do |home_page|
-      UrlData.new(CurlService.new(home_page).formated_response, home_page)
+      page_handler.uniq_pages_needing_ping.each do |uniq_page|
+        logger.info("Pinging #{uniq_page.path} for #{uniq_page.pages.size} page(s)")
+        response = CurlService.get_response(uniq_page.path)
+        uniq_page.response = response
+        logger.info("Received response for #{uniq_page.path}: #{response}")
+      end
+      report_ping_response_to_mqtt
+      page_handler.uniq_pages_needing_ping = nil
+    rescue => e
+      logger.error("Failed to ping pages: #{e.message}\n #{e.backtrace.join("\n")}")
+      raise "test"
     end
-  end  
 
 end

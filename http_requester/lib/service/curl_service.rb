@@ -1,5 +1,9 @@
 class CurlService
 
+  def self.get_response(target_path)
+    new(target_path).formated_response
+  end
+
   attr_accessor :target_path
 
   def initialize(target_path)
