@@ -1,15 +1,17 @@
 class PageHandler
-  UniqPagesNeedingPing = Struct.new(:path, :pages, :response) do
+  UniqPageNeedingPing = Struct.new(:path, :pages, :response) do
     def initialize(path, pages, response = nil)
       super
     end
   end
 
   attr_accessor :pages, :uniq_pages_needing_ping
+  attr_reader :logger
 
-  def initialize
+  def initialize(logger)
     @pages = []
     @uniq_pages_needing_ping = nil
+    @logger = logger
   end
 
   def add_page_from_change(change)
@@ -22,9 +24,9 @@ class PageHandler
   end
 
   def uniq_pages_needing_ping
-    puts "Calculating unique pages needing ping..."
+    logger.info("Calculating unique pages needing ping...")
     @uniq_pages_needing_ping ||= begin 
-      unique_pages = pages.find_all(&:ready_for_ping?).group_by(&:path).map { |path, pages| UniqPagesNeedingPing.new(path, pages) }
+      unique_pages = pages.find_all(&:ready_for_ping?).group_by(&:normalize_path).map { |path, pages| UniqPageNeedingPing.new(path, pages) }
       unique_pages.empty? ? nil : unique_pages
     end
   rescue => e

@@ -1,6 +1,6 @@
 class CurlService
 
-  def self.get_response(target_path)
+  def self.get_hashed_response(target_path)
     new(target_path).formated_response
   end
 
@@ -11,7 +11,14 @@ class CurlService
   end
   
   def curl_response_with_ms_lookup
-    @curl_response_with_ms_lookup ||= `curl -s -o /dev/null #{curl_write_ms_response} #{target_path}`
+    @curl_response_with_ms_lookup ||= begin
+      stdout, stderr, status = Open3.capture3("curl -s -o /dev/null #{curl_write_ms_response} #{@target_path}")
+      unless status.success?
+        return "status:500\ndns_lookup:0\nconnect_to_page:0\ntls_hand_shake:0\ntime_to_first_byte:0\ntotal_time:0\n"
+      else
+        stdout
+      end
+    end
   end
 
   def formated_response
@@ -26,7 +33,7 @@ class CurlService
   private
 
   def curl_write_ms_response
-    '-w "status:%{http_code}\ndns_lookup:%{time_namelookup}\nconnect_to_page:%{time_connect}\ntls_hand_shake:%{time_appconnect}\ntime_to_first_byte:%{time_starttransfer}\ntotal_time:%{time_total}\n"'
+    '-L -w "status:%{http_code}\ndns_lookup:%{time_namelookup}\nconnect_to_page:%{time_connect}\ntls_hand_shake:%{time_appconnect}\ntime_to_first_byte:%{time_starttransfer}\ntotal_time:%{time_total}\n" --connect-timeout 2 --max-time 5'
   end
 
 end
