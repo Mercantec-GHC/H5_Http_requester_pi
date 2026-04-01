@@ -1,5 +1,5 @@
 class Page
-  attr_accessor  :path, :interval_time, :id, :last_ping_time, :user_id
+  attr_accessor  :path, :interval_time, :id, :last_ping_time, :user_id, :normalize_path
 
   def initialize(id, path, interval_time, user_id)
     @id = id
@@ -8,14 +8,26 @@ class Page
     @last_ping_time = Time.now
     @user_id = user_id
   end
-
+  
   def ready_for_ping?
-    puts "testing if #{path} is ready for ping... (last ping: #{last_ping_time}, interval: #{interval_time}s)"
     Time.now - last_ping_time >= interval_time
   end
 
   def update_last_ping_time!
     @last_ping_time = Time.now
+  end
+
+  def normalize_path
+    @normalize_path ||= begin
+      normalized =
+        if !path.start_with?("http://", "https://")
+          "https://#{path}"
+        elsif path.start_with?("http://")
+          path.sub("http://", "https://")
+        else
+          path
+        end
+    end
   end
   
 end
