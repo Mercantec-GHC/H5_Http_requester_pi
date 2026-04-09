@@ -1,16 +1,26 @@
 class FaradayService
   attr_accessor :destanation_path
 
-  def self.get_bearer_token(destanation_path)
-    new(destanation_path).get_bearer_token
-  end
+  class << self
+    def get_bearer_token(destanation_path)
+      new(destanation_path).get_bearer_token
+    end
+  
+    def get_response(destanation_path, token)
+      new(destanation_path).get_response(token)
+    end
 
-  def self.get_response(destanation_path, token)
-    new(destanation_path).get_response(token)
+    def get_favicon(destanation_path)
+      new(destanation_path).get_favicon 
+    end
   end
   
   def initialize(destanation_path)
     @destanation_path = destanation_path
+  end
+
+  def get_favicon
+    faraday_client.get("#{destanation_path}/favicon.ico")
   end
   
   def get_response(token)
@@ -31,7 +41,10 @@ class FaradayService
   def faraday_client
     @faraday_client ||= begin
       Faraday.new do |faraday|
+        faraday.response :follow_redirects
         faraday.adapter Faraday.default_adapter
+        faraday.options.timeout = 10
+        faraday.options.open_timeout = 5
       end
     end
   end

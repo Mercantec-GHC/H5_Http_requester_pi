@@ -6,6 +6,8 @@ require "mqtt"
 require "thread"
 require "open3"
 require "dotenv"
+require "faraday/follow_redirects"
+require "base64"
 Dotenv.load(File.expand_path("../../.env", __dir__))
 
 Dir[File.join(__dir__, "**/*.rb")].sort.each do |file|
