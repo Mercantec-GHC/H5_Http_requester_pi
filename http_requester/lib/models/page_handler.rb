@@ -20,7 +20,7 @@ class PageHandler
   end
 
   def remove_page_from_change(change)
-    pages.reject! { |page| page.page_id == change.page_id }
+    pages.reject! { |page| page.id == change.page_id }
   end
 
   def uniq_pages_needing_ping

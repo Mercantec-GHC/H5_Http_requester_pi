@@ -2,14 +2,16 @@
 class MqttBroker
   MqttCreateResponse = Struct.new(:type, :user_id, :page_id, :path, :interval_time)
   MqttDeleteResponse = Struct.new(:type, :user_id, :page_id)
+  MqttPingRequest = Struct.new(:type, :request_id, :path)
 
-  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker
+  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker, :ping_request_topic
 
   def initialize(logger, state, immiediate_ping_worker)
     @logger = logger
     @state = state
     @create_page_topic = "uptime/websites/created"
     @delete_page_topic = "uptime/websites/deleted"
+    @ping_request_topic = "uptime/ping/requests"
     @publish_queue = Queue.new
     @immediate_ping_worker = immiediate_ping_worker
   end
@@ -20,11 +22,11 @@ class MqttBroker
         begin
           logger.info("Connecting subscriber to MQTT broker at localhost:1883...")
           MQTT::Client.connect(
-            host: "localhost",
-            port: 1883,
+            host: ENV.fetch("HOST", "localhost"),
+            port: ENV.fetch("MQTT_PORT", 1883),
             keep_alive: 5
           ) do |client|
-            client.subscribe(create_page_topic, delete_page_topic)
+            client.subscribe(create_page_topic, delete_page_topic, ping_request_topic)
             logger.info("Connected subscriber to MQTT broker")
             client.get do |topic, message|
               logger.info("Received message on '#{topic}': #{message}")
@@ -48,8 +50,8 @@ class MqttBroker
         begin
           logger.info("Connecting publisher to MQTT broker at localhost:1883...")
           MQTT::Client.connect(
-            host: "localhost",
-            port: 1883,
+            host: ENV.fetch("HOST", "localhost"),
+            port: ENV.fetch("MQTT_PORT", 1883),
             keep_alive: 5
           ) do |client|
             logger.info("Connected publisher to MQTT broker")
@@ -116,6 +118,13 @@ class MqttBroker
         mqtt_response.fetch("websiteId")
       )
       update_state(page)
+    when ping_request_topic
+      ping_request = MqttPingRequest.new(
+        mqtt_response.fetch("type"),
+        mqtt_response.fetch("requestId"),
+        mqtt_response.fetch("path")
+      )
+      immediate_ping_worker.quick_ping(ping_request, "uptime/ping/responses", "ping_preview_result")
     else
       logger.warn("Unknown topic: #{topic}")
     end
