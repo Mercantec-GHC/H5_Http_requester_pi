@@ -19,6 +19,17 @@ class PageHandler
     pages << page 
   end
 
+  def update_page_from_change(change)
+    page = pages.find { |p| p.id == change.page_id }
+    if page
+      page.path = change.path
+      page.interval_time = change.interval_time
+      logger.info("Updated page with id: #{change.page_id} to new path: #{change.path} and interval_time: #{change.interval_time}")
+    else
+      logger.warn("Page with id: #{change.page_id} not found for update")
+    end
+  end  
+
   def remove_page_from_change(change)
     pages.reject! { |page| page.id == change.page_id }
   end

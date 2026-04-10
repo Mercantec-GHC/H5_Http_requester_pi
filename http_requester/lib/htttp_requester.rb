@@ -115,6 +115,9 @@ class HttpRequester
       when "website_deleted"
         page_handler.remove_page_from_change(change)
         logger.info("Removed page with id: #{change.page_id}")
+      when "website_updated"
+        page_handler.update_page_from_change(change)
+        logger.info("Updated page with id: #{change.page_id}")
       else
         logger.warn("Unknown change type: #{change.type}")
       end
