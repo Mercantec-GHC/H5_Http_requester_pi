@@ -52,6 +52,7 @@ class HttpRequester
   def report_ping_response_to_mqtt!
     pages_json_array = page_handler.uniq_pages_needing_ping.flat_map do |uniq_page|
       pages = []
+      uniq_page.pages.each(&:update_last_ping_time!)
       pages_json = uniq_page.pages.map do |page|
         page.to_json.merge(response: uniq_page.response)
       end
