@@ -47,6 +47,6 @@ class ImmediatePingWorker
     page_hash = { id: page.page_id, path: page.path, user_id: page.user_id }
     publish_result.call("uptime/measurements", { pages: [page_hash.merge(response: curl_response)] }.to_json)
     favicon_response = FaradayService.get_favicon(path)
-    publish_result.call("uptime/page_update", page_hash.merge(favicon: Base64.strict_encode64(favicon_response.body)).to_json)
+    publish_result.call("uptime/update_favicon", page_hash.merge(favicon: Base64.strict_encode64(favicon_response.body)).to_json)
   end
 end

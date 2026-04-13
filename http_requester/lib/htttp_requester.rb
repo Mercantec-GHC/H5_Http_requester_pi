@@ -68,7 +68,7 @@ class HttpRequester
     logger.info("Loading websites from API...")
     response = FaradayService.get_bearer_token("http://#{ENV['HOST']}:#{ENV['PORT_ACCOUNT']}/accounts/login")
     logger.debug("API response: #{response.body}")
-    token = JSON.parse(response.body).fetch("token")
+    token = JSON.parse(response.body).fetch("accessToken")
     api_response = FaradayService.get_response("http://#{ENV['HOST']}:#{ENV['PORT_WEBSITES']}/api/Websites", token)
     JSON.parse(api_response.body).each do |page|
       page_handler.pages << Page.new(page.fetch("id"), page.fetch("url"), page.fetch("intervalTime"), page.fetch("userId"), page.fetch("faviconBase64") == nil ? false : true)

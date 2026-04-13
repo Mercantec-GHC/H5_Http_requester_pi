@@ -17,7 +17,7 @@ class State
   
   def add_change(change)
     mutex.synchronize do
-      logger.info("Adding change: #{change}")
+      logger.info("Adding change: #{change.to_s}")
       self.changes << change
     end
   end

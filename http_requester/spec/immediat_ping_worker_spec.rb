@@ -112,7 +112,7 @@ RSpec.describe ImmediatePingWorker do
       )
 
       expect(publish_result).to have_received(:call).with(
-        "uptime/page_update",
+        "uptime/update_favicon",
         {
           id: 1,
           path: "example.com",
