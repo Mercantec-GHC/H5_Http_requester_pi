@@ -68,7 +68,7 @@ class HttpRequester
     logger.info("Loading websites from API...")
     response = FaradayService.get_bearer_token("http://#{ENV['HOST']}:#{ENV['PORT_ACCOUNT']}/accounts/login")
     logger.debug("API response: #{response.body}")
-    token = JSON.parse(response.body).fetch("token")
+    token = JSON.parse(response.body).fetch("accessToken")
     api_response = FaradayService.get_response("http://#{ENV['HOST']}:#{ENV['PORT_WEBSITES']}/api/Websites", token)
     JSON.parse(api_response.body).each do |page|
       page_handler.pages << Page.new(page.fetch("id"), page.fetch("url"), page.fetch("intervalTime"), page.fetch("userId"), page.fetch("faviconBase64") == nil ? false : true)
@@ -115,6 +115,9 @@ class HttpRequester
       when "website_deleted"
         page_handler.remove_page_from_change(change)
         logger.info("Removed page with id: #{change.page_id}")
+      when "website_updated"
+        page_handler.update_page_from_change(change)
+        logger.info("Updated page with id: #{change.page_id}")
       else
         logger.warn("Unknown change type: #{change.type}")
       end

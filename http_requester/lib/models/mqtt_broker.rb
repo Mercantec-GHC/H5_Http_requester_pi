@@ -4,7 +4,7 @@ class MqttBroker
   MqttDeleteResponse = Struct.new(:type, :user_id, :page_id)
   MqttPingRequest = Struct.new(:type, :request_id, :path)
 
-  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker, :ping_request_topic
+  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker, :ping_request_topic, :mqtt_host, :update_page_topic
 
   def initialize(logger, state, immiediate_ping_worker)
     @logger = logger
@@ -12,21 +12,23 @@ class MqttBroker
     @create_page_topic = "uptime/websites/created"
     @delete_page_topic = "uptime/websites/deleted"
     @ping_request_topic = "uptime/ping/requests"
+    @update_page_topic = "uptime/websites/updated"
     @publish_queue = Queue.new
     @immediate_ping_worker = immiediate_ping_worker
+    @mqtt_host = ENV.fetch("HOST", "localhost")
   end
 
   def start_subscriber!
     Thread.new do
       loop do
         begin
-          logger.info("Connecting subscriber to MQTT broker at localhost:1883...")
+          logger.info("Connecting subscriber to MQTT broker at #{mqtt_host}:1883...")
           MQTT::Client.connect(
-            host: ENV.fetch("HOST", "localhost"),
+            host: mqtt_host,
             port: ENV.fetch("MQTT_PORT", 1883),
             keep_alive: 5
           ) do |client|
-            client.subscribe(create_page_topic, delete_page_topic, ping_request_topic)
+            client.subscribe(create_page_topic, delete_page_topic, ping_request_topic, update_page_topic)
             logger.info("Connected subscriber to MQTT broker")
             client.get do |topic, message|
               logger.info("Received message on '#{topic}': #{message}")
@@ -48,9 +50,9 @@ class MqttBroker
     Thread.new do
       loop do
         begin
-          logger.info("Connecting publisher to MQTT broker at localhost:1883...")
+          logger.info("Connecting publisher to MQTT broker at #{mqtt_host}:1883...")
           MQTT::Client.connect(
-            host: ENV.fetch("HOST", "localhost"),
+            host: mqtt_host,
             port: ENV.fetch("MQTT_PORT", 1883),
             keep_alive: 5
           ) do |client|
@@ -101,7 +103,7 @@ class MqttBroker
     mqtt_response = JSON.parse(message)
 
     case topic
-    when create_page_topic
+    when create_page_topic, update_page_topic
       page = MqttCreateResponse.new(
         mqtt_response.fetch("type"),
         mqtt_response.fetch("userId"),
@@ -110,7 +112,7 @@ class MqttBroker
         mqtt_response.fetch("interval_time")
       )
       update_state(page)
-      immediate_ping_worker.enqueue_page(page)
+      immediate_ping_worker.enqueue_page(page) unless topic == update_page_topic
     when delete_page_topic
       page = MqttDeleteResponse.new(
         mqtt_response.fetch("type"),
