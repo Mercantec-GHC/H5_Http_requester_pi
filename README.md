@@ -35,10 +35,42 @@ A lightweight monitoring service that fetches targets from an API, performs peri
 The service publishes request results:
 
 - Status codes  
-- Response times  
+- Response times 
+- favicons 
 
 ### Subscribe
 
 The service listens for updates:
 
-- Add/remove targets  
+- Add/remove/update targets
+- quick ping page  
+
+
+### How to run
+
+To run `http_requester`, you need a machine with Docker installed.
+
+Create a `.env` file with the following values:
+
+ADMIN_EMAIL=your_admin_email
+
+ADMIN_PASSWORD=your_admin_password
+
+HOST=your_server_hostname_or_ip
+
+PORT_ACCOUNT=your_account_api_port
+
+PORT_WEBSITES=your_website_api_port
+
+MAX_THREADS= empty
+
+PORT_MQTT=your_mqtt_port
+
+
+Make sure to reference the `.env` file in your `docker-compose.yml`.
+
+Build and start the application with:
+docker compose build
+docker compose up
+
+The application should now be running.

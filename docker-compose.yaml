@@ -4,7 +4,6 @@ services:
   http_requester:
     build: ./http_requester
     image: http_requester
-    # network_mode: host
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file:

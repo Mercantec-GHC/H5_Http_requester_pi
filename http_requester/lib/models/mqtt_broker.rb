@@ -4,9 +4,9 @@ class MqttBroker
   MqttDeleteResponse = Struct.new(:type, :user_id, :page_id)
   MqttPingRequest = Struct.new(:type, :request_id, :path)
 
-  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker, :ping_request_topic, :mqtt_host, :update_page_topic
+  attr_reader :logger, :state, :create_page_topic, :delete_page_topic, :publish_queue, :immediate_ping_worker, :ping_request_topic, :mqtt_host, :update_page_topic, :mqtt_port
 
-  def initialize(logger, state, immiediate_ping_worker)
+  def initialize(logger, state, immediate_ping_worker)
     @logger = logger
     @state = state
     @create_page_topic = "uptime/websites/created"
@@ -14,18 +14,20 @@ class MqttBroker
     @ping_request_topic = "uptime/ping/requests"
     @update_page_topic = "uptime/websites/updated"
     @publish_queue = Queue.new
-    @immediate_ping_worker = immiediate_ping_worker
+    @immediate_ping_worker = immediate_ping_worker
     @mqtt_host = ENV.fetch("HOST", "localhost")
+    @mqtt_port = ENV.fetch("MQTT_PORT", 1883)
+
   end
 
   def start_subscriber!
     Thread.new do
       loop do
         begin
-          logger.info("Connecting subscriber to MQTT broker at #{mqtt_host}:1883...")
+          logger.info("Connecting subscriber to MQTT broker at #{mqtt_host}:#{mqtt_port}...")
           MQTT::Client.connect(
             host: mqtt_host,
-            port: ENV.fetch("MQTT_PORT", 1883),
+            port: mqtt_port,
             keep_alive: 5
           ) do |client|
             client.subscribe(create_page_topic, delete_page_topic, ping_request_topic, update_page_topic)
@@ -50,10 +52,10 @@ class MqttBroker
     Thread.new do
       loop do
         begin
-          logger.info("Connecting publisher to MQTT broker at #{mqtt_host}:1883...")
+          logger.info("Connecting publisher to MQTT broker at #{mqtt_host}:#{mqtt_port}...")
           MQTT::Client.connect(
             host: mqtt_host,
-            port: ENV.fetch("MQTT_PORT", 1883),
+            port: mqtt_port,
             keep_alive: 5
           ) do |client|
             logger.info("Connected publisher to MQTT broker")

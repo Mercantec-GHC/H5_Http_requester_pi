@@ -2,8 +2,8 @@ class HttpRequester
   
   attr_accessor :logger, :stop, :state, :page_handler, :mqtt_broker, :immediate_ping_worker
 
-  def initialize(logger)
-    @logger = logger
+  def initialize
+    @logger = Logger.new($stdout)
     @stop = false
     @state = State.new(logger)
     @page_handler = PageHandler.new(logger)
@@ -67,7 +67,6 @@ class HttpRequester
   def load_websites_from_api!
     logger.info("Loading websites from API...")
     response = FaradayService.get_bearer_token("http://#{ENV['HOST']}:#{ENV['PORT_ACCOUNT']}/accounts/login")
-    logger.debug("API response: #{response.body}")
     token = JSON.parse(response.body).fetch("accessToken")
     api_response = FaradayService.get_response("http://#{ENV['HOST']}:#{ENV['PORT_WEBSITES']}/api/Websites", token)
     JSON.parse(api_response.body).each do |page|
@@ -100,10 +99,8 @@ class HttpRequester
   end
   
   def start_mqtt_client!
-    Thread.new do
-      self.mqtt_broker = MqttBroker.new(logger, state, immediate_ping_worker)
-      mqtt_broker.start!
-    end
+    self.mqtt_broker = MqttBroker.new(logger, state, immediate_ping_worker)
+    mqtt_broker.start!
   end
   
   def update_page_handler!
