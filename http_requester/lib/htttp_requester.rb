@@ -1,6 +1,6 @@
 class HttpRequester
   
-  attr_accessor :home_pages, :curl_responses, :logger, :stop, :state, :page_handler, :mqtt_broker, :immediate_ping_worker
+  attr_accessor :logger, :stop, :state, :page_handler, :mqtt_broker, :immediate_ping_worker
 
   def initialize(logger)
     @logger = logger
